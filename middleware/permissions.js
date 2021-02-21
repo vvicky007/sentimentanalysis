@@ -1,23 +1,27 @@
 const User = require("../db/models/users");
 const axios = require("axios");
-const { SERVERERROR, UNAUTHORIZED } = require("../constants");
+const Request = require("../db/models/requests");
+const { SERVERERROR, UNAUTHORIZED, NOTFOUND } = require("../constants");
 exports.permissions = async (req, res, next) => {
   if (req.admin) {
-    const { email } = req.body;
-
+    const { reqId, email } = req.body;
     try {
-      const user = await User.findUser(email);
-      const resp = await axios.get(
-        "http://localhost:3000/superadmin/permissions/" + user.id,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + req.token,
-          },
+      const request = await Request.findReq({ _id: reqId });
+      if (request) {
+        req.permissions = request.status;
+        if (
+          request.raisedFor === email &&
+          request.type === req.method.toString()
+        ) {
+          next();
+        } else {
+          res
+            .status(UNAUTHORIZED)
+            .json({ message: "Not Authorised....Check the request status" });
         }
-      );
-      req.permissions = resp.data.permission;
-      next();
+      } else {
+        res.status(NOTFOUND).json({ message: `Request not found ${reqId}` });
+      }
     } catch (e) {
       res.status(SERVERERROR).json({ message: e });
     }
