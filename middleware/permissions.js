@@ -1,5 +1,6 @@
 const User = require("../db/models/users");
 const axios = require("axios");
+const { SERVERERROR, UNAUTHORIZED } = require("../constants");
 exports.permissions = async (req, res, next) => {
   if (req.admin) {
     const { email } = req.body;
@@ -18,9 +19,9 @@ exports.permissions = async (req, res, next) => {
       req.permissions = resp.data.permission;
       next();
     } catch (e) {
-      res.status(500).json({ message: e });
+      res.status(SERVERERROR).json({ message: e });
     }
   } else {
-    res.staus(401).json({ message: "not an admin" });
+    res.status(UNAUTHORIZED).json({ message: "not an admin" });
   }
 };
