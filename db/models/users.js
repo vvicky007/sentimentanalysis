@@ -57,9 +57,7 @@ userSchema.methods.generateToken = async function () {
     role = superadmin;
   }
 
-  const token = await jwt.sign({ role, id: user._id.toString() }, secret, {
-    expiresIn: "24h",
-  });
+  const token = await jwt.sign({ role, id: user._id.toString() }, secret);
   user.tokens = user.tokens.concat({ token });
   return token;
 };
