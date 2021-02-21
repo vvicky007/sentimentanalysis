@@ -5,16 +5,16 @@ const {
   customer,
   admin,
   superadmin,
-  unauthorized,
+  UNAUTHORIZED,
 } = require("../constants");
 exports.getRole = async (req, res, next) => {
   if (!req.headers.authorization)
-    res.status(unauthorized).send({ message: "Not authorized to access data" });
+    res.status(UNAUTHORIZED).send({ message: "Not authorized to access data" });
   else {
     const token = req.headers.authorization.split(" ")[1];
     if (!token)
       res
-        .status(unauthorized)
+        .status(UNAUTHORIZED)
         .send({ message: "Not Authorized to access data" });
     else {
       try {
@@ -27,7 +27,7 @@ exports.getRole = async (req, res, next) => {
         next();
       } catch (e) {
         console.log(e);
-        res.status(unauthorized).send({ message: "Please Login again" });
+        res.status(UNAUTHORIZED).send({ message: "Please Login again" });
       }
     }
   }
