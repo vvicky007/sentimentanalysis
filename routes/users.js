@@ -2,6 +2,7 @@ const express = require("express");
 const User = require("../db/models/users");
 const { verifyToken } = require("../middleware/verifyToken");
 const md5 = require("md5");
+const { SERVERERROR, OK, NOTFOUND, UNAUTHORIZED } = require("../constants");
 const userRouter = express.Router();
 function router() {
   userRouter.route("/signin").post(async (req, res) => {
@@ -18,9 +19,9 @@ function router() {
         const token = await user.generateToken();
         user.save();
         console.log(token);
-        res.status(200).json({ email: user.email, token, message: "success" });
+        res.status(OK).json({ email: user.email, token, message: "success" });
       } catch (e) {
-        res.status(500).json({ message: e });
+        res.status(SERVERERROR).json({ message: e });
       }
     }
   });
@@ -30,9 +31,9 @@ function router() {
       req.user.actions.push({ action: "uploaded a post:" + post });
       req.user.posts.push({ post });
       await req.user.save();
-      res.status(200).send(req.user);
+      res.status(OK).send(req.user.posts);
     } catch (e) {
-      res.status(500).json({ message: e });
+      res.status(SERVERERROR).json({ message: e });
     }
   });
   userRouter.get("/posts", verifyToken, async (req, res) => {
@@ -40,24 +41,23 @@ function router() {
       const posts = req.user.posts.reverse();
       req.user.actions.push({ action: "requested for posts" });
       await req.user.save();
-      res.status(200).send(posts);
+      res.status(OK).send(posts);
     } catch (e) {
-      res.status(500).json({ message: e });
+      res.status(SERVERERROR).json({ message: e });
     }
   });
   userRouter.delete("/post", verifyToken, async (req, res) => {
     try {
       const { postId } = req.body;
       const updatedPosts = req.user.posts.filter((post) => post.id != postId);
-      console.log(updatedPosts);
       req.user.posts = updatedPosts;
       req.user.actions.push({ action: "deleted a post. postID:" + postId });
       await req.user.save();
       res
-        .status(200)
+        .status(OK)
         .json({ posts: req.user.posts, message: "Deleted Successfully" });
     } catch (e) {
-      res.status(500).json({ message: e });
+      res.status(SERVERERROR).json({ message: e });
     }
   });
 
