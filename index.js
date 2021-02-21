@@ -13,7 +13,7 @@ app.use("/users", userRouter);
 app.use("/admin", adminRouter);
 app.use("/superadmin", superadminRouter);
 app.get("/", (req, res) => {
-  res.send("hello world");
+  res.send("OSlash Hiring.... Please go to https://github.com/vvicky007/sentimentanalysis/tree/Oslashhiring to view the documentation and how to run");
 });
 app.listen(process.env.PORT || config.port, () => {
   console.info("running on " + config.port);
