@@ -1,13 +1,21 @@
 const jwt = require("jsonwebtoken");
 const User = require("../db/models/users");
-const { secret, customer, admin, superadmin } = require("../constants");
+const {
+  secret,
+  customer,
+  admin,
+  superadmin,
+  unauthorized,
+} = require("../constants");
 exports.getRole = async (req, res, next) => {
   if (!req.headers.authorization)
-    res.status(401).send({ message: "Not authorized to access data" });
+    res.status(unauthorized).send({ message: "Not authorized to access data" });
   else {
     const token = req.headers.authorization.split(" ")[1];
     if (!token)
-      res.status(401).send({ message: "Not Authorized to access data" });
+      res
+        .status(unauthorized)
+        .send({ message: "Not Authorized to access data" });
     else {
       try {
         const decoded = jwt.verify(token, secret);
@@ -19,7 +27,7 @@ exports.getRole = async (req, res, next) => {
         next();
       } catch (e) {
         console.log(e);
-        res.status(401).send({ message: "Please Login again" });
+        res.status(unauthorized).send({ message: "Please Login again" });
       }
     }
   }
