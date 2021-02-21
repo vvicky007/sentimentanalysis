@@ -1,9 +1,16 @@
 const express = require("express");
 const { getRole } = require("../middleware/getRole");
 const { permissions } = require("../middleware/permissions");
-const { SERVERERROR, OK, NOTFOUND, UNAUTHORIZED } = require("../constants");
+const {
+  SERVERERROR,
+  OK,
+  NOTFOUND,
+  UNAUTHORIZED,
+  admin,
+} = require("../constants");
 const adminRouter = new express.Router();
 const User = require("../db/models/users");
+const Request = require("../db/models/requests");
 function router() {
   adminRouter.delete("/users/posts", getRole, permissions, async (req, res) => {
     if (req.permissions) {
@@ -57,7 +64,6 @@ function router() {
         user.actions.push({
           action: `posted by admin.Admin:${req.user.email}, post:${post}`,
         });
-        console.log("inisded");
         await user.save();
         res.status(OK).json({ message: "Success", posts: user.posts });
       } catch (e) {
@@ -113,6 +119,25 @@ function router() {
       res
         .status(UNAUTHORIZED)
         .json({ message: "Permission denied" + req.permissions });
+    }
+  });
+  adminRouter.post("/raiseReq", getRole, async (req, res) => {
+    if (req.admin) {
+      try {
+        const { email, actionType } = req.body;
+        const request = new Request({
+          raisedBy: req.user.email,
+          raisedFor: email,
+          type: actionType,
+        });
+        await request.save();
+        res.status(200).json({ request });
+      } catch (e) {
+        console.log(e);
+        res.status(SERVERERROR).json({ message: e });
+      }
+    } else {
+      res.status(UNAUTHORIZED).json({ message: "Permission denied" });
     }
   });
   return adminRouter;

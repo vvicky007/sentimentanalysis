@@ -7,23 +7,10 @@ const natural = require("natural");
 const { SERVERERROR, OK, NOTFOUND, UNAUTHORIZED } = require("../constants");
 const SW = require("stopword");
 const User = require("../db/models/users");
+const Request = require("../db/models/requests");
 const spellCorrector = new SpellCorrector();
 spellCorrector.loadDictionary();
 function router() {
-  superadminRouter.get("/permissions/:id", getRole, async (req, res) => {
-    try {
-      console.log(req.params);
-      if (req.admin) {
-        res.status(OK).json({ message: "Success", permission: true });
-      } else {
-        res.status(UNAUTHORIZED).send({ message: "No authentication" });
-      }
-    } catch (e) {
-      res.status(SERVERERROR).json({ message: e });
-      console.log("error", e);
-    }
-  });
-
   superadminRouter.get("/user/auditlogs", getRole, async (req, res) => {
     if (req.superadmin) {
       try {
@@ -35,6 +22,31 @@ function router() {
       }
     } else {
       res.status(UNAUTHORIZED).json({ message: "Not an super admin" });
+    }
+  });
+  superadminRouter.get("/requests", getRole, async (req, res) => {
+    if (req.superadmin) {
+      const requests = await Request.find();
+      res.status(OK).json({ requests });
+    } else {
+      res.status(UNAUTHORIZED).json({ message: "Not a super admin" });
+    }
+  });
+  superadminRouter.patch("/request", getRole, async (req, res) => {
+    if (req.superadmin) {
+      const { reqId, status } = req.body;
+      const request = await Request.find({ _id: reqId });
+      if (request.length != 0) {
+        request[0].status = status === "true";
+        await request[0].save();
+        res.status(OK).send({ message: "success" });
+      } else {
+        res
+          .status(NOTFOUND)
+          .json({ message: `No post found with id ${reqId}` });
+      }
+    } else {
+      res.status(UNAUTHORIZED).json({ message: "Not a super admin" });
     }
   });
   superadminRouter.get("/user/analyse", getRole, async (req, res) => {
