@@ -4,6 +4,7 @@ const superadminRouter = new express.Router();
 const aposToLexForm = require("apos-to-lex-form");
 const SpellCorrector = require("spelling-corrector");
 const natural = require("natural");
+const { SERVERERROR, OK, NOTFOUND, UNAUTHORIZED } = require("../constants");
 const SW = require("stopword");
 const User = require("../db/models/users");
 const spellCorrector = new SpellCorrector();
@@ -13,12 +14,12 @@ function router() {
     try {
       console.log(req.params);
       if (req.admin) {
-        res.status(200).json({ message: "Success", permission: true });
+        res.status(OK).json({ message: "Success", permission: true });
       } else {
-        res.status(401).send({ message: "No authentication" });
+        res.status(UNAUTHORIZED).send({ message: "No authentication" });
       }
     } catch (e) {
-      res.status(500).json({ message: e });
+      res.status(SERVERERROR).json({ message: e });
       console.log("error", e);
     }
   });
@@ -28,12 +29,12 @@ function router() {
       try {
         const { email } = req.body;
         const user = await User.findUser(email);
-        res.status(200).json({ actions: user.actions });
+        res.status(OK).json({ actions: user.actions });
       } catch (e) {
-        res.status(500).json({ message: e });
+        res.status(SERVERERROR).json({ message: e });
       }
     } else {
-      res.status(401).json({ message: "Not an super admin" });
+      res.status(UNAUTHORIZED).json({ message: "Not an super admin" });
     }
   });
   superadminRouter.get("/user/analyse", getRole, async (req, res) => {
@@ -65,21 +66,20 @@ function router() {
           let x = analyzer.getSentiment(filteredReview);
           analysis.push(x);
         });
-        console.log(analysis);
         let sum = analysis.reduce((a, b) => a + b, 0);
         let avg = sum / analysis.length;
         if (avg < 0) {
-          res.status(200).json({ message: "Bad" });
+          res.status(OK).json({ message: "Bad" });
         } else if (avg > 0) {
-          res.status(200).json({ message: "Good" });
+          res.status(OK).json({ message: "Good" });
         } else {
-          res.status(200).json({ message: "Neutral" });
+          res.status(OK).json({ message: "Neutral" });
         }
       } catch (e) {
-        res.status(500).json({ message: e });
+        res.status(SERVERERROR).json({ message: e });
       }
     } else {
-      res.status(401).json({ message: "Not an super admin" });
+      res.status(UNAUTHORIZED).json({ message: "Not an super admin" });
     }
   });
 
