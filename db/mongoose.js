@@ -1,4 +1,4 @@
-const url = `mongodb://127.0.0.1:27017/users`;
+const url = `mongodb+srv://vineeth:123mongo@cluster0.kwlut.mongodb.net/OslashHiring?retryWrites=true&w=majority`;
 const mongoose = require("mongoose");
 mongoose.connect(url, {
   useNewUrlParser: true,
