@@ -1,4 +1,4 @@
-const url = `mongodb+srv://vineeth:123mongo@cluster0.kwlut.mongodb.net/OslashHiring?retryWrites=true&w=majority`;
+const url = process.env.MONGOURI;
 const mongoose = require("mongoose");
 mongoose.connect(url, {
   useNewUrlParser: true,
