@@ -34,16 +34,25 @@ function router() {
   });
   superadminRouter.patch("/request", getRole, async (req, res) => {
     if (req.superadmin) {
-      const { reqId, status } = req.body;
-      const request = await Request.find({ _id: reqId });
-      if (request.length != 0) {
-        request[0].status = status === "true";
-        await request[0].save();
-        res.status(OK).send({ message: "success" });
-      } else {
-        res
-          .status(NOTFOUND)
-          .json({ message: `No post found with id ${reqId}` });
+      try {
+        const { reqId, status } = req.body;
+        const request = await Request.find({ _id: reqId });
+        const user = await User.find({ email: request[0].raisedBy });
+        if (request.length != 0 && user.length != 0) {
+          if (user[0].role === "admin") {
+            request[0].status = status === "true";
+            await request[0].save();
+            res.status(OK).send({ message: "success" });
+          } else {
+            res.status(NOTFOUND).json({ message: "Admin does not exist" });
+          }
+        } else {
+          res.status(NOTFOUND).json({
+            message: `No req found with id ${reqId} or admin does not exist`,
+          });
+        }
+      } catch (e) {
+        res.status(SERVERERROR).json({ message: e });
       }
     } else {
       res.status(UNAUTHORIZED).json({ message: "Not a super admin" });
