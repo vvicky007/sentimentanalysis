@@ -1,7 +1,7 @@
 const express = require("express");
 const { getRole } = require("../middleware/getRole");
 const { permissions } = require("../middleware/permissions");
-
+const { SERVERERROR, OK, NOTFOUND, UNAUTHORIZED } = require("../constants");
 const adminRouter = new express.Router();
 const User = require("../db/models/users");
 function router() {
@@ -12,7 +12,7 @@ function router() {
         const user = await User.findUser(email);
         const updatedPosts = user.posts.filter((post) => post.id != postId);
         if (updatedPosts.length == user.posts.length) {
-          res.status(400).json({ message: "no post found" });
+          res.status(NOTFOUND).json({ message: "no post found" });
         } else {
           user.posts = updatedPosts;
           user.actions.push({
@@ -21,14 +21,16 @@ function router() {
           await user.save();
 
           res
-            .status(200)
+            .status(OK)
             .json({ message: "Deleted Successfully", posts: user.posts });
         }
       } catch (e) {
-        res.status(500).json({ message: e });
+        res.status(SERVERERROR).json({ message: e });
       }
     } else {
-      res.status(401).json({ message: "Permission denied" + req.permissions });
+      res
+        .status(UNAUTHORIZED)
+        .json({ message: "Permission denied" + req.permissions });
     }
   });
   adminRouter.get("/users/posts", getRole, permissions, async (req, res) => {
@@ -36,12 +38,14 @@ function router() {
       try {
         const { email } = req.body;
         const user = await User.findUser(email);
-        res.status(200).json({ message: "Success", posts: user.posts });
+        res.status(OK).json({ message: "Success", posts: user.posts });
       } catch (e) {
-        res.status(500).json({ message: e });
+        res.status(SERVERERROR).json({ message: e });
       }
     } else {
-      res.status(401).json({ message: "Permission denied" + req.permissions });
+      res
+        .status(UNAUTHORIZED)
+        .json({ message: "Permission denied" + req.permissions });
     }
   });
   adminRouter.post("/users/posts", getRole, permissions, async (req, res) => {
@@ -51,15 +55,18 @@ function router() {
         const user = await User.findUser(email);
         user.posts.push({ post });
         user.actions.push({
-          action: `posted by admin.Admin:${req.user.email}, postID:${postId}`,
+          action: `posted by admin.Admin:${req.user.email}, post:${post}`,
         });
+        console.log("inisded");
         await user.save();
-        res.status(200).json({ message: "Success", posts: user.posts });
+        res.status(OK).json({ message: "Success", posts: user.posts });
       } catch (e) {
-        res.status(500).json({ message: e });
+        res.status(SERVERERROR).json({ message: e });
       }
     } else {
-      res.status(401).json({ message: "Permission denied" + req.permissions });
+      res
+        .status(UNAUTHORIZED)
+        .json({ message: "Permission denied" + req.permissions });
     }
   });
   adminRouter.get("/user/auditlogs", getRole, async (req, res) => {
@@ -68,14 +75,15 @@ function router() {
         const { email } = req.body;
         const user = await User.findUser(email);
         user.actions.push({
-          action: `get request by admin.Admin:${req.user.email}, postID:${postId}`,
+          action: `audit logs requested by admin ${req.user.email}`,
         });
-        res.status(200).json({ actions: user.actions });
+        await user.save();
+        res.status(OK).json({ actions: user.actions });
       } catch (e) {
-        res.status(500).json({ message: e });
+        res.status(SERVERERROR).json({ message: e });
       }
     } else {
-      res.status(401).json({ message: "Not an admin" });
+      res.status(UNAUTHORIZED).json({ message: "Not an admin" });
     }
   });
   adminRouter.put("/users/posts", getRole, permissions, async (req, res) => {
@@ -85,7 +93,7 @@ function router() {
         const user = await User.findUser(email);
         const updatedPosts = user.posts.filter((post) => post.id != postId);
         if (updatedPosts.length == user.posts.length) {
-          res.status(400).json({ message: "no post found" });
+          res.status(NOTFOUND).json({ message: "no post found" });
         } else {
           user.posts = updatedPosts;
           user.posts.push({ post });
@@ -95,14 +103,16 @@ function router() {
           await user.save();
 
           res
-            .status(200)
-            .json({ message: "Deleted Successfully", posts: user.posts });
+            .status(OK)
+            .json({ message: "Updated Successfully", posts: user.posts });
         }
       } catch (e) {
-        res.status(500).json({ message: e });
+        res.status(SERVERERROR).json({ message: e });
       }
     } else {
-      res.status(401).json({ message: "Permission denied" + req.permissions });
+      res
+        .status(UNAUTHORIZED)
+        .json({ message: "Permission denied" + req.permissions });
     }
   });
   return adminRouter;
