@@ -1,4 +1,4 @@
-exports.secret = "Oslash";
+exports.secret = process.env.SECRET ;
 exports.admin = "ADMIN";
 exports.customer = "USER";
 exports.superadmin = "SUPERADMIN";
