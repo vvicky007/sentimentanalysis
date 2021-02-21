@@ -9,7 +9,6 @@ function router() {
     const { email, password, role } = req.body;
     const user = new User({ email, password: md5(password), role });
     const userinfo = await User.findUser(email);
-    console.log(userinfo);
     if (userinfo != null) {
       res.status(302).json({
         message: "user already exists",
@@ -18,7 +17,6 @@ function router() {
       try {
         const token = await user.generateToken();
         user.save();
-        console.log(token);
         res.status(OK).json({ email: user.email, token, message: "success" });
       } catch (e) {
         res.status(SERVERERROR).json({ message: e });
